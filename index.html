@@ -319,118 +319,9 @@ body{font-family:var(--fb);color:var(--ink);background:var(--white);line-height:
   .nav-links a{display:none}
 }
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-
-/* ── GOOGLE LOGIN ── */
-#page-login{position:fixed;inset:0;z-index:500;background:linear-gradient(135deg,#F0FDFA 0%,#ECFDF5 40%,#F0F9FF 100%);display:flex;align-items:center;justify-content:center;padding:1rem}
-.login-card{background:white;border-radius:24px;padding:2.5rem 2rem;max-width:400px;width:100%;box-shadow:0 20px 40px rgba(15,23,42,.12),0 8px 16px rgba(15,23,42,.08);text-align:center;animation:slideUp .4s ease}
-.login-logo-wrap{display:flex;justify-content:center;margin-bottom:1.5rem}
-.login-logo{width:64px;height:64px;background:var(--teal);border-radius:18px;display:flex;align-items:center;justify-content:center}
-.login-logo svg{width:36px;height:36px;color:white}
-.login-title{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--ink);margin-bottom:8px}
-.login-sub{font-size:15px;color:var(--muted);margin-bottom:2rem;line-height:1.6}
-.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px 24px;border-radius:12px;border:1.5px solid var(--border2);background:white;font-size:15px;font-family:var(--fb);font-weight:500;color:var(--ink);cursor:pointer;transition:all .2s;margin-bottom:12px}
-.btn-google:hover{border-color:var(--teal);background:#F0FDFA;transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.15)}
-.btn-google:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.google-icon{width:22px;height:22px;flex-shrink:0}
-.login-terms{font-size:12px;color:var(--muted2);line-height:1.6}
-.login-divider{display:flex;align-items:center;gap:12px;margin:1rem 0;color:var(--muted2);font-size:13px}
-.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.login-loading{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1rem 0}
-.login-loading .spin{width:32px;height:32px;border-width:3px}
-.login-error{padding:10px 14px;border-radius:var(--r);background:#FCEBEB;border:1px solid #F09595;font-size:13px;color:#A32D2D;margin-bottom:1rem;display:none}
-
-/* 로그인 후 앱 상단 유저 정보 */
-.user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--teal-l)}
-.user-name{font-size:13px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn-logout{padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:white;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--fb);transition:all .2s}
-.btn-logout:hover{border-color:var(--rose);color:var(--rose)}
-.topbar-user{display:flex;align-items:center;gap:8px;margin-left:auto}
 </style>
 </head>
 <body>
-
-<!-- ═══════════════ FIREBASE SDK ═══════════════ -->
-<script type="module">
-  import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-
-  const firebaseConfig={
-    apiKey:"AIzaSyBqnGSgUSntTU7kq7XwBWB2J7NMXXChiUM",
-    authDomain:"inquirymate-65e89.firebaseapp.com",
-    projectId:"inquirymate-65e89",
-    storageBucket:"inquirymate-65e89.firebasestorage.app",
-    messagingSenderId:"33651121142",
-    appId:"1:33651121142:web:477657e939f9d89a2385d7"
-  };
-
-  const app=initializeApp(firebaseConfig);
-  const auth=getAuth(app);
-  const provider=new GoogleAuthProvider();
-  provider.setCustomParameters({prompt:'select_account'});
-
-  // 전역으로 내보내기
-  window._fbAuth=auth;
-  window._fbProvider=provider;
-  window._fbSignIn=()=>signInWithPopup(auth,provider);
-  window._fbSignOut=()=>signOut(auth);
-
-  // 로그인 상태 감시
-  onAuthStateChanged(auth,(user)=>{
-    if(user){
-      window._fbUser=user;
-      document.getElementById('page-login').classList.add('hidden');
-      // 앱이 아직 안 열렸으면 랜딩 표시
-      if(document.getElementById('page-app').classList.contains('hidden')&&
-         document.getElementById('page-landing').style.display!=='none'){
-        document.getElementById('page-landing').style.display='';
-      }
-      updateUserUI(user);
-    }else{
-      window._fbUser=null;
-      // 모든 페이지 숨기고 로그인 화면 표시
-      document.getElementById('page-landing').style.display='none';
-      document.getElementById('page-app').classList.add('hidden');
-      document.getElementById('page-login').classList.remove('hidden');
-    }
-  });
-
-  function updateUserUI(user){
-    // 상단바 유저 정보 업데이트
-    const wrap=document.getElementById('topbar-user-wrap');
-    if(wrap){
-      wrap.innerHTML=`
-        <div class="topbar-user">
-          <img class="user-avatar" src="${user.photoURL||''}" onerror="this.style.display='none'" alt="">
-          <span class="user-name">${user.displayName||user.email}</span>
-          <button class="btn-logout" onclick="window._fbSignOut()">로그아웃</button>
-        </div>`;
-    }
-    // 사이드바 유저 정보
-    const sbUser=document.getElementById('sb-user');
-    if(sbUser&&window.S){
-      // 유저 이름을 사이드바에도 반영
-    }
-  }
-</script>
-
-<!-- ═══════════════ LOGIN PAGE ═══════════════ -->
-<div id="page-login">
-  <div class="login-card">
-    <div class="login-logo-wrap">
-      <div class="login-logo">
-        <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </div>
-    </div>
-    <div class="login-title">InquiryMate</div>
-    <div class="login-sub">고등학생이 혼자서도 끝까지 완성하는<br>진학용 과제탐구 AI 길잡이</div>
-    <div class="login-error" id="login-error"></div>
-    <button class="btn-google" id="btn-google-login" onclick="doGoogleLogin()">
-      <svg class="google-icon" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Google 계정으로 시작하기
-    </button>
-    <div class="login-terms">로그인하면 서비스 이용약관 및 개인정보처리방침에<br>동의하는 것으로 간주됩니다</div>
-  </div>
-</div>
 
 <!-- ═══════════════ LANDING ═══════════════ -->
 <div id="page-landing">
@@ -585,7 +476,6 @@ body{font-family:var(--fb);color:var(--ink);background:var(--white);line-height:
         <div class="topbar-step" id="tb-step">단계 1 · 주제 선정</div>
         <div class="topbar-prog" id="tb-pills"></div>
         <button class="topbar-apikey apikey-no" id="tb-apikey-btn" onclick="openApiKeyModal('settings')">🔑 API Key 설정</button>
-      <div id="topbar-user-wrap"></div>
       </div>
       <div class="app-content" id="app-content"></div>
     </main>
@@ -1204,34 +1094,14 @@ async function sendChatMobile(){const e=document.getElementById('mobile-cp-input
 function setBtn(btn,loading,txt){if(!btn)return;btn.disabled=loading;btn.innerHTML=loading?`<span class="spin"></span> ${txt}`:txt;}
 function smoothTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'});return false;}
 
-/* ── GOOGLE LOGIN ── */
-async function doGoogleLogin(){
-  const btn=document.getElementById('btn-google-login');
-  const errEl=document.getElementById('login-error');
-  errEl.style.display='none';
-  btn.disabled=true;
-  btn.innerHTML=`<span class="spin" style="width:20px;height:20px;border-width:2px"></span> 로그인 중...`;
-  try{
-    await window._fbSignIn();
-    // onAuthStateChanged가 자동으로 처리
-  }catch(e){
-    let msg='로그인에 실패했습니다. 다시 시도해 주세요.';
-    if(e.code==='auth/popup-blocked')msg='팝업이 차단됐어요. 브라우저에서 팝업을 허용해 주세요.';
-    else if(e.code==='auth/popup-closed-by-user')msg='로그인 창이 닫혔어요. 다시 시도해 주세요.';
-    else if(e.code==='auth/unauthorized-domain')msg='이 도메인은 Firebase에서 허용되지 않았습니다. Firebase 콘솔에서 도메인을 추가해 주세요.';
-    errEl.textContent=msg;errEl.style.display='block';
-  }
-  btn.disabled=false;
-  btn.innerHTML=`<svg class="google-icon" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google 계정으로 시작하기`;
-}
-
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded',()=>{
   initObChips();
   const saved=localStorage.getItem('im_apikey');
   if(saved){S.apiKey=saved;}
-  // 로그인 화면은 Firebase onAuthStateChanged가 자동으로 제어
+  document.head.insertAdjacentHTML('beforeend','<style>@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}</style>');
 });
 </script>
 </body>
 </html>
+HTMLEOF
