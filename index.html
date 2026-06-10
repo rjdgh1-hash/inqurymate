@@ -969,7 +969,6 @@ function saveStep(i){
   }
 }
 function goNext(from){
-  if(!S.apiKey&&from<5){if(!confirm('API Key 없이는 AI 기능을 쓸 수 없어요. 계속 진행하시겠어요?'))return;}
   if(from===0&&!S.data.topic){alert('주제를 먼저 선택해 주세요!');return;}
   if(from===1){const q=document.getElementById('ta-q')?.value?.trim();if(!q){alert('탐구 질문을 입력해 주세요!');return;}S.data.question=q;}
   saveStep(from);
